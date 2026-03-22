@@ -1,0 +1,11 @@
+# Environments
+.env
+.venv/
+
+# Google Service Account Credentials
+service_account.json
+
+# Cache
+__pycache__/
+*.py[cod]
+*$py.class
