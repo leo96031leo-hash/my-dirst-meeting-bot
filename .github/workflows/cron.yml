@@ -10,6 +10,9 @@ on:
 jobs:
   run-bot:
     runs-on: ubuntu-latest
+    # 根據官方建議加入環境變數，提早採用 Node 24 來消除警告
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     
     steps:
       - name: Checkout Code
