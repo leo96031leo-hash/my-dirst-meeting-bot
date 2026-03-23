@@ -99,7 +99,7 @@ def main():
     
     # 若被標記為不開會
     if cancel_items:
-        draft_message = "@All\n各位夥伴好，本週暫停 meeting 一次！大家辛苦了 ☕"
+        draft_message = "各位夥伴好，本週暫停 meeting 一次！大家辛苦了 ☕"
     else:
         # 2. 重新啟用 Gemini AI，讓它幫忙整理重點與加上 Emoji
         prompt_text = (
@@ -114,8 +114,8 @@ def main():
             "   碩一15分鐘\n"
             "   [你潤飾整理過的碩一學術重點]\n"
             "   碩二20分鐘\n"
-            "   [你潤飾整理过的碩二學術重點]\n"
-            "4. 絕對不要自己輸出 @All 或 [你的名字]，系統會自動在最上面加 @All 發送。\n\n"
+            "   [你潤飾整理過的碩二學術重點]\n"
+            "4. 絕對不要輸出 [請填寫...] 或 [你的名字] 這種需要人工補齊的假佔位符，不需要署名。\n\n"
             "以下為本次會議的實際原始資訊：\n"
         )
         for item in pending_items:
@@ -134,7 +134,7 @@ def main():
             model = genai.GenerativeModel('gemini-2.5-flash')
             response = model.generate_content(prompt_text)
             
-            # 把 Gemini 誤加的字眼清掉，因為 LINE API 等等會自動在最前面生出一個完美的藍色 @All 標籤
+            # 把 Gemini 誤加的標記字眼清掉
             draft_message = response.text.replace('@All', '').replace('@all', '').strip()
             
         except Exception as e:
@@ -152,11 +152,7 @@ def main():
         "messages": [
             {
                 "type": "text",
-                "text": draft_message,
-                "mention": {
-                    # LINE API 規範：廣播 @All 只需要 type="all" 即可，不用給長度和位置，它會自動把字首加上 @All
-                    "mentions": [{"type": "all"}]
-                }
+                "text": draft_message
             }
         ]
     }
