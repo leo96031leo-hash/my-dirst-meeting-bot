@@ -28,7 +28,9 @@ def main():
     load_dotenv()
     
     LINE_CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN')
-    LINE_GROUP_ID = os.getenv('LINE_GROUP_ID')
+    LINE_GROUP_ID_STR = os.getenv('LINE_GROUP_ID', '')
+    # 支援單一或多個群組 ID（用逗號分隔），並將字串轉換成陣列
+    line_group_ids = [gid.strip() for gid in LINE_GROUP_ID_STR.split(',') if gid.strip()]
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
     GOOGLE_SHEET_URL = os.getenv('GOOGLE_SHEET_URL')
     GOOGLE_CREDENTIALS_FILE = os.getenv('GOOGLE_CREDENTIALS_FILE', 'service_account.json')
@@ -140,24 +142,34 @@ def main():
         except Exception as e:
             print(f"呼叫 Gemini API 失敗: {e}")
             return
+            
+    if not line_group_ids:
+        print("未設定 LINE_GROUP_ID，無法發送任何通知。")
+        return
     
-    # 3. 發送至 LINE 群組 (改用原生 requests 並遵循最新版 Mention All API 規則)
+    # 3. 發送至 LINE 群組 (支援多群組 Multicast 廣播)
     import requests
     headers = {
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {LINE_CHANNEL_ACCESS_TOKEN}'
     }
-    payload = {
-        "to": LINE_GROUP_ID,
-        "messages": [
-            {
-                "type": "text",
-                "text": draft_message
-            }
-        ]
-    }
+    
+    # 依照群組數量決定打「單發(push)」還是「群發(multicast)」的 API
+    if len(line_group_ids) == 1:
+        api_url = 'https://api.line.me/v2/bot/message/push'
+        payload = {
+            "to": line_group_ids[0],
+            "messages": [{"type": "text", "text": draft_message}]
+        }
+    else:
+        api_url = 'https://api.line.me/v2/bot/message/multicast'
+        payload = {
+            "to": line_group_ids,
+            "messages": [{"type": "text", "text": draft_message}]
+        }
+        
     try:
-        res = requests.post('https://api.line.me/v2/bot/message/push', headers=headers, json=payload)
+        res = requests.post(api_url, headers=headers, json=payload)
         res.raise_for_status()
     except Exception as e:
         print(f"發送 LINE 訊息失敗: {e}")
