@@ -1,5 +1,17 @@
 import os
 import datetime
+import socket
+
+# 針對 LINE API 強制使用 IPv4，不影響 Google (解決剛剛的 oauth2 timeout 災情)
+_orig_getaddrinfo = socket.getaddrinfo
+
+def patched_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    if host == 'api.line.me':
+        family = socket.AF_INET
+    return _orig_getaddrinfo(host, port, family, type, proto, flags)
+
+socket.getaddrinfo = patched_getaddrinfo
+
 import gspread
 from dotenv import load_dotenv
 import google.generativeai as genai
@@ -58,7 +70,7 @@ def main():
     # 呼叫 Gemini AI
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         response = model.generate_content(prompt_text)
         draft_message = response.text
     except Exception as e:
