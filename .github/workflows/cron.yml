@@ -2,8 +2,8 @@ name: Daily Meeting Bot Cron
 
 on:
   schedule:
-    # 每天早上 10:00 (台灣時間為 UTC+8，所以填 02:00) 執行一次
-    - cron: '0 2 * * *'
+    # 為了避開全球 Github 伺服器的整點塞車潮，改設為每天早上 10:15 觸發 (UTC 02:15)
+    - cron: '15 2 * * *'
   # 允許使用者在 GitHub 網頁上點擊按鈕手動觸發測試
   workflow_dispatch: 
 
