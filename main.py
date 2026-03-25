@@ -147,32 +147,30 @@ def main():
         print("未設定 LINE_GROUP_ID，無法發送任何通知。")
         return
     
-    # 3. 發送至 LINE 群組 (支援多群組 Multicast 廣播)
+    # 3. 發送至 LINE 群組 (因 LINE 官方 Multicast 不支援群組 ID，改為安全迴圈 Push)
     import requests
     headers = {
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {LINE_CHANNEL_ACCESS_TOKEN}'
     }
     
-    # 依照群組數量決定打「單發(push)」還是「群發(multicast)」的 API
-    if len(line_group_ids) == 1:
-        api_url = 'https://api.line.me/v2/bot/message/push'
+    api_url = 'https://api.line.me/v2/bot/message/push'
+    success_count = 0
+    
+    for gid in line_group_ids:
         payload = {
-            "to": line_group_ids[0],
+            "to": gid,
             "messages": [{"type": "text", "text": draft_message}]
         }
-    else:
-        api_url = 'https://api.line.me/v2/bot/message/multicast'
-        payload = {
-            "to": line_group_ids,
-            "messages": [{"type": "text", "text": draft_message}]
-        }
-        
-    try:
-        res = requests.post(api_url, headers=headers, json=payload)
-        res.raise_for_status()
-    except Exception as e:
-        print(f"發送 LINE 訊息失敗: {e}")
+        try:
+            res = requests.post(api_url, headers=headers, json=payload)
+            res.raise_for_status()
+            success_count += 1
+        except Exception as e:
+            print(f"發送給群組 {gid} 失敗: {e}")
+            
+    if success_count == 0:
+        print("所有群組的 LINE 發送皆失敗，停止後續更新動作。")
         return
         
     # 4. 更新 Google Sheets (寫入今天的日期)
