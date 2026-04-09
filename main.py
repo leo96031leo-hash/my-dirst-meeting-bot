@@ -64,7 +64,7 @@ def main():
     pending_items = []
     cancel_items = []
     update_rows = []
-    tomorrow_datetime = datetime.datetime.now() + datetime.timedelta(days=1)
+    tomorrow_datetime = datetime.datetime.now()
     
     for i, row in enumerate(records):
         # 把欄位內容轉成字串並去除空白
